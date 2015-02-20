@@ -232,10 +232,15 @@ public class GoogleComputeEngineServiceAdapter implements ComputeServiceAdapter<
 
    private Disk createBootDisk(Template template, String instanceName) {
       URI imageUri = template.getImage().getUri();
+      Image image = api.getImageApiForProject(userProject.get()).get(template.getImage().getName());
 
       GoogleComputeEngineTemplateOptions options = GoogleComputeEngineTemplateOptions.class.cast(template.getOptions()).clone();
 
       int diskSize = options.getBootDiskSize().or(10l).intValue();
+      if (image.getDiskSizeGb() > diskSize) {
+         logger.warn("Requested disk size of %sGB but image disk size is larger (%sGB); using image disk size", diskSize, image.getDiskSizeGb());
+         diskSize = image.getDiskSizeGb();
+      }
 
       String diskName = instanceName + "-" + GCE_BOOT_DISK_SUFFIX;
 

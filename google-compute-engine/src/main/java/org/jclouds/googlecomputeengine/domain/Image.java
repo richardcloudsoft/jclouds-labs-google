@@ -38,18 +38,20 @@ import com.google.common.base.Optional;
 public final class Image extends Resource {
 
    private final String sourceType;
+   private final int diskSizeGb;
    private final RawDisk rawDisk;
    private final Optional<Deprecated> deprecated;
 
    @ConstructorProperties({
            "id", "creationTimestamp", "selfLink", "name", "description", "sourceType",
-           "rawDisk", "deprecated"
+           "diskSizeGb", "rawDisk", "deprecated"
    })
    protected Image(String id, Date creationTimestamp, URI selfLink, String name, String description,
-                   String sourceType, RawDisk rawDisk, Deprecated deprecated) {
+                   String sourceType, Integer diskSizeGb, RawDisk rawDisk, Deprecated deprecated) {
       super(Kind.IMAGE, id, creationTimestamp, selfLink, name, description);
       this.sourceType = checkNotNull(sourceType, "sourceType of %s", name);
-      this.rawDisk = checkNotNull(rawDisk, "rawDisk of %s", name);
+      this.diskSizeGb = checkNotNull(diskSizeGb, "diskSizeGb of %s", name);
+      this.rawDisk = rawDisk;
       this.deprecated = fromNullable(deprecated);
    }
 
@@ -60,7 +62,14 @@ public final class Image extends Resource {
       return sourceType;
    }
 
-   /**
+    /**
+     * @return the size of the image's disk in gigabytes
+     */
+   public int getDiskSizeGb() {
+      return diskSizeGb;
+   }
+
+    /**
     * @return the raw disk image parameters.
     */
    public RawDisk getRawDisk() {
@@ -81,6 +90,7 @@ public final class Image extends Resource {
       return super.string()
               .omitNullValues()
               .add("sourceType", sourceType)
+              .add("diskSizeGb", diskSizeGb)
               .add("rawDisk", rawDisk)
               .add("deprecated", deprecated.orNull());
    }
@@ -104,6 +114,7 @@ public final class Image extends Resource {
    public static final class Builder extends Resource.Builder<Builder> {
 
       private String sourceType;
+      private int diskSizeGb;
       private RawDisk rawDisk;
       private Deprecated deprecated;
 
@@ -112,6 +123,14 @@ public final class Image extends Resource {
        */
       public Builder sourceType(String sourceType) {
          this.sourceType = checkNotNull(sourceType, "sourceType");
+         return this;
+      }
+
+      /**
+       * @see Image#getDiskSizeGb()
+       */
+      public Builder diskSizeGb(Integer diskSizeGb) {
+         this.diskSizeGb = checkNotNull(diskSizeGb, "diskSizeGb");
          return this;
       }
 
@@ -127,7 +146,7 @@ public final class Image extends Resource {
        * @see Image#getRawDisk()
        */
       public Builder rawDisk(RawDisk rawDisk) {
-         this.rawDisk = checkNotNull(rawDisk);
+         this.rawDisk = rawDisk;
          return this;
       }
 
@@ -138,12 +157,13 @@ public final class Image extends Resource {
 
       public Image build() {
          return new Image(super.id, super.creationTimestamp, super.selfLink, super.name,
-                 super.description, sourceType, rawDisk, deprecated);
+                 super.description, sourceType, diskSizeGb, rawDisk, deprecated);
       }
 
       public Builder fromImage(Image in) {
          return super.fromResource(in)
                  .sourceType(in.getSourceType())
+                 .diskSizeGb(in.getDiskSizeGb())
                  .rawDisk(in.getRawDisk())
                  .deprecated(in.getDeprecated().orNull());
       }
